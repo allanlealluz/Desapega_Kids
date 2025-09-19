@@ -1,0 +1,376 @@
+<div class="container py-5">
+    <div class="row justify-content-center">
+        <div class="col-lg-8">
+            <div class="card shadow-sm">
+                <div class="card-header bg-primary text-white">
+                    <h3 class="mb-0">
+                        <i class="bi bi-heart-fill me-2"></i>Doar um Item
+                    </h3>
+                    <p class="mb-0 mt-2 opacity-75">Preencha as informações do item que você quer doar</p>
+                </div>
+                
+                <div class="card-body">
+                    <div id="donateAlert"></div>
+                    
+                    <form id="donateForm" enctype="multipart/form-data">
+                        <!-- Informações Básicas -->
+                        <h5 class="text-primary mb-3">
+                            <i class="bi bi-info-circle me-2"></i>Informações Básicas
+                        </h5>
+                        
+                        <div class="row">
+                            <div class="col-md-8 mb-3">
+                                <label for="title" class="form-label">Título do item *</label>
+                                <input type="text" class="form-control" id="title" name="title" 
+                                       placeholder="Ex: Vestido infantil rosa tamanho 4" required maxlength="100">
+                                <div class="form-text">Seja claro e específico</div>
+                            </div>
+                            
+                            <div class="col-md-4 mb-3">
+                                <label for="category" class="form-label">Categoria *</label>
+                                <select class="form-select" id="category" name="category" required>
+                                    <option value="">Selecione...</option>
+                                    <option value="roupas">Roupas</option>
+                                    <option value="brinquedos">Brinquedos</option>
+                                    <option value="livros">Livros</option>
+                                    <option value="acessorios">Acessórios</option>
+                                    <option value="mobiliario">Mobiliário</option>
+                                    <option value="outros">Outros</option>
+                                </select>
+                            </div>
+                        </div>
+                        
+                        <div class="mb-3">
+                            <label for="description" class="form-label">Descrição *</label>
+                            <textarea class="form-control" id="description" name="description" rows="4" 
+                                      placeholder="Descreva o item: estado, marca, características especiais..." 
+                                      required maxlength="500"></textarea>
+                            <div class="form-text">
+                                <span id="charCount">0</span>/500 caracteres
+                            </div>
+                        </div>
+                        
+                        <!-- Detalhes do Item -->
+                        <h5 class="text-primary mb-3 mt-4">
+                            <i class="bi bi-gear me-2"></i>Detalhes do Item
+                        </h5>
+                        
+                        <div class="row">
+                            <div class="col-md-4 mb-3">
+                                <label for="condition" class="form-label">Estado *</label>
+                                <select class="form-select" id="condition" name="condition" required>
+                                    <option value="">Selecione...</option>
+                                    <option value="novo">Novo</option>
+                                    <option value="muito_bom">Muito Bom</option>
+                                    <option value="bom">Bom</option>
+                                    <option value="usado">Usado</option>
+                                </select>
+                            </div>
+                            
+                            <div class="col-md-4 mb-3" id="sizeField" style="display: none;">
+                                <label for="size" class="form-label">Tamanho</label>
+                                <input type="text" class="form-control" id="size" name="size" 
+                                       placeholder="Ex: 4 anos, M, 38">
+                            </div>
+                            
+                            <div class="col-md-4 mb-3">
+                                <label for="brand" class="form-label">Marca</label>
+                                <input type="text" class="form-control" id="brand" name="brand" 
+                                       placeholder="Ex: Nike, Barbie">
+                            </div>
+                        </div>
+                        
+                        <div class="row">
+                            <div class="col-md-6 mb-3">
+                                <label for="color" class="form-label">Cor principal</label>
+                                <input type="text" class="form-control" id="color" name="color" 
+                                       placeholder="Ex: Rosa, Azul">
+                            </div>
+                            
+                            <div class="col-md-6 mb-3" id="ageRangeField" style="display: none;">
+                                <label for="ageRange" class="form-label">Idade recomendada</label>
+                                <select class="form-select" id="ageRange" name="ageRange">
+                                    <option value="">Selecione...</option>
+                                    <option value="0-1">0 a 1 ano</option>
+                                    <option value="2-3">2 a 3 anos</option>
+                                    <option value="4-6">4 a 6 anos</option>
+                                    <option value="7-10">7 a 10 anos</option>
+                                    <option value="11+">11+ anos</option>
+                                </select>
+                            </div>
+                        </div>
+                        
+                        <!-- Fotos -->
+                        <h5 class="text-primary mb-3 mt-4">
+                            <i class="bi bi-camera me-2"></i>Fotos do Item
+                        </h5>
+                        
+                        <div class="mb-3">
+                            <label for="images" class="form-label">Adicionar fotos *</label>
+                            <input type="file" class="form-control" id="images" name="images" 
+                                   accept="image/*" multiple required>
+                            <div class="form-text">
+                                Adicione até 5 fotos. A primeira será a foto principal.
+                            </div>
+                        </div>
+                        
+                        <!-- Preview das imagens -->
+                        <div id="imagePreview" class="row mb-3"></div>
+                        
+                        <!-- Localização -->
+                        <h5 class="text-primary mb-3 mt-4">
+                            <i class="bi bi-geo-alt me-2"></i>Localização
+                        </h5>
+                        
+                        <div class="row">
+                            <div class="col-md-6 mb-3">
+                                <label for="city" class="form-label">Cidade *</label>
+                                <input type="text" class="form-control" id="city" name="city" 
+                                       placeholder="Ex: São Paulo" required>
+                            </div>
+                            
+                            <div class="col-md-3 mb-3">
+                                <label for="state" class="form-label">Estado *</label>
+                                <select class="form-select" id="state" name="state" required>
+                                    <option value="">UF</option>
+                                    <option value="SP">SP</option>
+                                    <option value="RJ">RJ</option>
+                                    <option value="MG">MG</option>
+                                    <option value="RS">RS</option>
+                                    <option value="PR">PR</option>
+                                    <!-- Adicionar todos os estados -->
+                                </select>
+                            </div>
+                            
+                            <div class="col-md-3 mb-3">
+                                <label for="zipcode" class="form-label">CEP</label>
+                                <input type="text" class="form-control" id="zipcode" name="zipcode" 
+                                       placeholder="00000-000" maxlength="9">
+                            </div>
+                        </div>
+                        
+                        <div class="mb-4">
+                            <label for="neighborhood" class="form-label">Bairro</label>
+                            <input type="text" class="form-control" id="neighborhood" name="neighborhood" 
+                                   placeholder="Ex: Vila Madalena">
+                        </div>
+                        
+                        <!-- Termos -->
+                        <div class="mb-4">
+                            <div class="form-check">
+                                <input class="form-check-input" type="checkbox" id="acceptTerms" required>
+                                <label class="form-check-label" for="acceptTerms">
+                                    Confirmo que o item está em boas condições e concordo com os 
+                                    <a href="/terms" target="_blank">termos de doação</a>
+                                </label>
+                            </div>
+                        </div>
+                        
+                        <!-- Botões -->
+                        <div class="d-flex gap-3">
+                            <button type="button" class="btn btn-outline-secondary" onclick="history.back()">
+                                <i class="bi bi-arrow-left me-1"></i>Voltar
+                            </button>
+                            <button type="submit" class="btn btn-primary flex-fill" id="submitBtn">
+                                <span id="submitSpinner" class="spinner-border spinner-border-sm d-none me-2"></span>
+                                <i class="bi bi-heart-fill me-1"></i>Doar Item
+                            </button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<style>
+.image-preview {
+    position: relative;
+    margin-bottom: 1rem;
+}
+
+.image-preview img {
+    width: 100%;
+    height: 150px;
+    object-fit: cover;
+    border-radius: 8px;
+}
+
+.image-preview .remove-image {
+    position: absolute;
+    top: 5px;
+    right: 5px;
+    background: rgba(255, 0, 0, 0.8);
+    color: white;
+    border: none;
+    border-radius: 50%;
+    width: 30px;
+    height: 30px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+}
+
+.main-image {
+    border: 3px solid var(--primary-color) !important;
+}
+
+.main-image::after {
+    content: 'Principal';
+    position: absolute;
+    bottom: 5px;
+    left: 5px;
+    background: var(--primary-color);
+    color: white;
+    padding: 2px 6px;
+    border-radius: 3px;
+    font-size: 0.7rem;
+}
+</style>
+
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    const form = document.getElementById('donateForm');
+    const categorySelect = document.getElementById('category');
+    const imagesInput = document.getElementById('images');
+    const imagePreview = document.getElementById('imagePreview');
+    const descriptionTextarea = document.getElementById('description');
+    const charCount = document.getElementById('charCount');
+    
+    // Mostrar campos específicos baseado na categoria
+    categorySelect.addEventListener('change', function() {
+        const sizeField = document.getElementById('sizeField');
+        const ageRangeField = document.getElementById('ageRangeField');
+        
+        if (this.value === 'roupas') {
+            sizeField.style.display = 'block';
+            ageRangeField.style.display = 'none';
+        } else if (this.value === 'brinquedos') {
+            sizeField.style.display = 'none';
+            ageRangeField.style.display = 'block';
+        } else {
+            sizeField.style.display = 'none';
+            ageRangeField.style.display = 'none';
+        }
+    });
+    
+    // Contador de caracteres
+    descriptionTextarea.addEventListener('input', function() {
+        charCount.textContent = this.value.length;
+    });
+    
+    // Preview de imagens
+    imagesInput.addEventListener('change', function() {
+        const files = Array.from(this.files);
+        imagePreview.innerHTML = '';
+        
+        if (files.length > 5) {
+            showAlert('Máximo de 5 fotos permitidas', 'warning');
+            return;
+        }
+        
+        files.forEach((file, index) => {
+            if (file.type.startsWith('image/')) {
+                const reader = new FileReader();
+                reader.onload = function(e) {
+                    const col = document.createElement('div');
+                    col.className = 'col-md-3 col-6';
+                    col.innerHTML = `
+                        <div class="image-preview ${index === 0 ? 'main-image' : ''}">
+                            <img src="${e.target.result}" alt="Preview">
+                            <button type="button" class="remove-image" onclick="removeImage(${index})">
+                                <i class="bi bi-x"></i>
+                            </button>
+                        </div>
+                    `;
+                    imagePreview.appendChild(col);
+                };
+                reader.readAsDataURL(file);
+            }
+        });
+    });
+    
+    // Máscara para CEP
+    document.getElementById('zipcode').addEventListener('input', function() {
+        let value = this.value.replace(/\D/g, '');
+        if (value.length >= 5) {
+            value = value.replace(/^(\d{5})(\d)/, '$1-$2');
+        }
+        this.value = value;
+    });
+    
+    // Submit do formulário
+    form.addEventListener('submit', function(e) {
+        e.preventDefault();
+        submitForm();
+    });
+    
+    function showAlert(message, type = 'danger') {
+        const alertDiv = document.getElementById('donateAlert');
+        alertDiv.innerHTML = `
+            <div class="alert alert-${type} alert-dismissible fade show">
+                ${message}
+                <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+            </div>
+        `;
+    }
+    
+    function setLoading(loading) {
+        const submitBtn = document.getElementById('submitBtn');
+        const spinner = document.getElementById('submitSpinner');
+        
+        if (loading) {
+            submitBtn.disabled = true;
+            spinner.classList.remove('d-none');
+        } else {
+            submitBtn.disabled = false;
+            spinner.classList.add('d-none');
+        }
+    }
+    
+    async function submitForm() {
+        setLoading(true);
+        
+        try {
+            const formData = new FormData(form);
+            
+            const response = await fetch('/api/items', {
+                method: 'POST',
+                body: formData
+            });
+            
+            const result = await response.json();
+            
+            if (result.success) {
+                showAlert('Item cadastrado com sucesso!', 'success');
+                setTimeout(() => {
+                    window.location.href = '/meus-itens';
+                }, 2000);
+            } else {
+                showAlert(result.message || 'Erro ao cadastrar item');
+            }
+        } catch (error) {
+            console.error('Erro:', error);
+            showAlert('Erro ao cadastrar item. Tente novamente.');
+        } finally {
+            setLoading(false);
+        }
+    }
+});
+
+function removeImage(index) {
+    // Implementar remoção de imagem específica
+    const imagesInput = document.getElementById('images');
+    const files = Array.from(imagesInput.files);
+    files.splice(index, 1);
+    
+    // Criar novo FileList (não é possível modificar diretamente)
+    const dt = new DataTransfer();
+    files.forEach(file => dt.items.add(file));
+    imagesInput.files = dt.files;
+    
+    // Trigger change event para atualizar preview
+    imagesInput.dispatchEvent(new Event('change'));
+}
+</script>
