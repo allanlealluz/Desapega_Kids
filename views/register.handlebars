@@ -1,0 +1,188 @@
+<div id="registerAlert"></div>
+
+<h2 class="mb-4 text-center">Criar Conta</h2>
+
+<form id="registerForm">
+    <div class="mb-3">
+        <label for="name" class="form-label">Nome completo</label>
+        <input type="text" class="form-control" id="name" placeholder="Seu nome" required>
+    </div>
+
+    <div class="mb-3">
+        <label for="email" class="form-label">Email</label>
+        <input type="email" class="form-control" id="email" placeholder="seu@email.com" required>
+    </div>
+
+    <div class="mb-3">
+        <label for="password" class="form-label">Senha</label>
+        <input type="password" class="form-control" id="password" placeholder="Mínimo 6 caracteres" required minlength="6">
+        <div class="form-text">A senha deve ter pelo menos 6 caracteres.</div>
+    </div>
+
+    <div class="mb-3">
+        <label for="confirmPassword" class="form-label">Confirmar senha</label>
+        <input type="password" class="form-control" id="confirmPassword" placeholder="Digite a senha novamente" required>
+    </div>
+
+    <div class="mb-3 form-check">
+        <input type="checkbox" class="form-check-input" id="acceptTerms" required>
+        <label class="form-check-label" for="acceptTerms">
+            Aceito os <a href="/terms" target="_blank">termos de uso</a> e <a href="/privacy" target="_blank">política de privacidade</a>
+        </label>
+    </div>
+
+    <button type="submit" class="btn btn-primary w-100" id="registerBtn">
+        <span id="registerSpinner" class="spinner-border spinner-border-sm d-none me-2"></span>
+        Criar conta
+    </button>
+</form>
+
+<div class="divider"><span>ou</span></div>
+
+<button type="button" class="btn btn-google w-100" id="googleRegisterBtn">
+    <i class="bi bi-google me-2"></i>
+    Continuar com Google
+</button>
+
+<div class="text-center mt-4">
+    <p class="mb-0">Já tem conta? <a href="/login" class="text-decoration-none fw-semibold">Fazer login</a></p>
+</div>
+
+<script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-auth-compat.js"></script>
+
+<script>
+const firebaseConfig = {
+  apiKey: "AIzaSyAl7UODazn1P_Y3bz1fG5c94z4nLvP2iDU",
+  authDomain: "desapega-kids.firebaseapp.com",
+  projectId: "desapega-kids",
+  storageBucket: "desapega-kids.firebasestorage.app",
+  messagingSenderId: "617286670076",
+  appId: "1:617286670076:web:dd859fff720c4fc6512979",
+  measurementId: "G-99FYXVZ13K"
+};
+firebase.initializeApp(firebaseConfig);
+
+const auth = firebase.auth();
+const provider = new firebase.auth.GoogleAuthProvider();
+
+document.addEventListener('DOMContentLoaded', function() {
+    const registerForm = document.getElementById('registerForm');
+    const registerBtn = document.getElementById('registerBtn');
+    const registerSpinner = document.getElementById('registerSpinner');
+    const googleRegisterBtn = document.getElementById('googleRegisterBtn');
+    const alertDiv = document.getElementById('registerAlert');
+
+    function showAlert(message, type = 'danger') {
+        alertDiv.innerHTML = `
+            <div class="alert alert-${type} alert-dismissible fade show">
+                ${message}
+                <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+            </div>
+        `;
+    }
+
+    function setLoading(loading) {
+        if (loading) {
+            registerBtn.disabled = true;
+            registerSpinner.classList.remove('d-none');
+        } else {
+            registerBtn.disabled = false;
+            registerSpinner.classList.add('d-none');
+        }
+    }
+
+    function validatePasswords() {
+        const password = document.getElementById('password').value;
+        const confirmPassword = document.getElementById('confirmPassword').value;
+        if (password !== confirmPassword) {
+            document.getElementById('confirmPassword').setCustomValidity('As senhas não coincidem');
+        } else {
+            document.getElementById('confirmPassword').setCustomValidity('');
+        }
+    }
+
+    document.getElementById('confirmPassword').addEventListener('input', validatePasswords);
+    document.getElementById('password').addEventListener('input', validatePasswords);
+
+    registerForm.addEventListener('submit', async function(e) {
+        e.preventDefault();
+        setLoading(true);
+        alertDiv.innerHTML = '';
+
+        const name = document.getElementById('name').value;
+        const email = document.getElementById('email').value;
+        const password = document.getElementById('password').value;
+
+        if (password !== document.getElementById('confirmPassword').value) {
+            showAlert('As senhas não coincidem.');
+            setLoading(false);
+            return;
+        }
+
+        try {
+            const userCredential = await auth.createUserWithEmailAndPassword(email, password);
+            const user = userCredential.user;
+            const idToken = await user.getIdToken();
+
+            const response = await fetch('/api/auth/register', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({
+                    idToken,
+                    email: user.email,
+                    displayName: name,
+                    uid: user.uid
+                })
+            });
+
+            if (!response.ok) throw new Error('Erro no servidor');
+
+            showAlert('Conta criada com sucesso!', 'success');
+            setTimeout(() => { window.location.href = '/'; }, 1500);
+        } catch (error) {
+            console.error(error);
+            let message = 'Erro ao criar conta. Tente novamente.';
+            if (error.code) {
+                switch(error.code) {
+                    case 'auth/email-already-in-use': message = 'Este email já está em uso.'; break;
+                    case 'auth/invalid-email': message = 'Email inválido.'; break;
+                    case 'auth/weak-password': message = 'Senha muito fraca. Use pelo menos 6 caracteres.'; break;
+                }
+            }
+            showAlert(message);
+        } finally {
+            setLoading(false);
+        }
+    });
+
+    googleRegisterBtn.addEventListener('click', async function() {
+        try {
+            const result = await auth.signInWithPopup(provider);
+            const user = result.user;
+            const idToken = await user.getIdToken();
+
+            const response = await fetch('/api/auth/register', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({
+                    idToken,
+                    email: user.email,
+                    displayName: user.displayName,
+                    photoURL: user.photoURL,
+                    uid: user.uid,
+                    provider: 'google'
+                })
+            });
+
+            if (!response.ok) throw new Error('Erro no servidor');
+
+            showAlert('Conta criada com sucesso!', 'success');
+            setTimeout(() => { window.location.href = '/'; }, 1500);
+        } catch (error) {
+            console.error(error);
+            showAlert('Erro ao criar conta com Google. Tente novamente.');
+        }
+    });
+});
+</script>

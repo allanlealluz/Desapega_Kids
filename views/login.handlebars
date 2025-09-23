@@ -1,0 +1,182 @@
+<div id="loginAlert"></div>
+
+<h2 class="mb-4 text-center">Fazer Login</h2>
+
+<form id="loginForm">
+  <div class="mb-3">
+    <label for="email" class="form-label">Email</label>
+    <input type="email" class="form-control" id="email" placeholder="seu@email.com" required>
+  </div>
+
+  <div class="mb-3">
+    <label for="password" class="form-label">Senha</label>
+    <input type="password" class="form-control" id="password" placeholder="Sua senha" required>
+  </div>
+
+  <div class="mb-3 form-check">
+    <input type="checkbox" class="form-check-input" id="rememberMe">
+    <label class="form-check-label" for="rememberMe">Lembrar de mim</label>
+  </div>
+
+  <button type="submit" class="btn btn-primary" id="loginBtn">
+    <span id="loginSpinner" class="spinner-border spinner-border-sm d-none me-2"></span>
+    Entrar
+  </button>
+</form>
+
+<div class="divider">
+  <span>ou</span>
+</div>
+
+<button type="button" class="btn btn-google" id="googleLoginBtn">
+  <i class="bi bi-google me-2"></i> Continuar com Google
+</button>
+
+<div class="text-center mt-4">
+  <p class="mb-2">
+    <a href="/forgot-password" class="text-decoration-none">Esqueceu sua senha?</a>
+  </p>
+  <p class="mb-0">
+    Não tem conta? <a href="/register" class="text-decoration-none fw-semibold">Criar conta</a>
+  </p>
+</div>
+
+<!-- 🔥 Correção: scripts do Firebase -->
+<script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-auth-compat.js"></script>
+<script>
+  const firebaseConfig = {
+    apiKey: "AIzaSyAl7UODazn1P_Y3bz1fG5c94z4nLvP2iDU",
+    authDomain: "desapega-kids.firebaseapp.com",
+    projectId: "desapega-kids",
+    storageBucket: "desapega-kids.firebasestorage.app",
+    messagingSenderId: "617286670076",
+    appId: "1:617286670076:web:dd859fff720c4fc6512979",
+    measurementId: "G-99FYXVZ13K"
+  };
+  firebase.initializeApp(firebaseConfig);
+
+  // Variáveis globais usadas no login
+  window.auth = firebase.auth();
+  window.provider = new firebase.auth.GoogleAuthProvider();
+</script>
+
+<!-- Script de login -->
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+  const loginForm = document.getElementById('loginForm');
+  const loginBtn = document.getElementById('loginBtn');
+  const loginSpinner = document.getElementById('loginSpinner');
+  const googleLoginBtn = document.getElementById('googleLoginBtn');
+  const alertDiv = document.getElementById('loginAlert');
+
+  function showAlert(message, type = 'danger') {
+    alertDiv.innerHTML = `
+      <div class="alert alert-${type} alert-dismissible fade show">
+        ${message}
+        <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+      </div>
+    `;
+  }
+
+  function setLoading(loading) {
+    if (loading) {
+      loginBtn.disabled = true;
+      loginSpinner.classList.remove('d-none');
+    } else {
+      loginBtn.disabled = false;
+      loginSpinner.classList.add('d-none');
+    }
+  }
+
+  // Login com email e senha
+  loginForm.addEventListener('submit', async function(e) {
+    e.preventDefault();
+    setLoading(true);
+    alertDiv.innerHTML = '';
+
+    const email = document.getElementById('email').value;
+    const password = document.getElementById('password').value;
+
+    try {
+      const userCredential = await firebase.auth().signInWithEmailAndPassword(email, password);
+      
+      const user = userCredential.user;
+
+      const idToken = await user.getIdToken();
+
+      const response = await fetch('/api/auth/login', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          idToken: idToken,
+          email: user.email,
+          displayName: user.displayName || user.email.split('@')[0],
+          uid: user.uid
+        })
+      });
+
+      if (response.ok) {
+        showAlert('Login realizado com sucesso!', 'success');
+        setTimeout(() => {
+          window.location.href = '/';
+        }, 1500);
+      } else {
+        throw new Error('Erro no servidor');
+      }
+    } catch (error) {
+      console.error('Erro no login:', error);
+
+      let errorMessage = 'Erro ao fazer login. Tente novamente.';
+      switch (error.code) {
+        case 'auth/user-not-found': errorMessage = 'Usuário não encontrado.'; break;
+        case 'auth/wrong-password': errorMessage = 'Senha incorreta.'; break;
+        case 'auth/invalid-email': errorMessage = 'Email inválido.'; break;
+        case 'auth/user-disabled': errorMessage = 'Conta desabilitada.'; break;
+        case 'auth/too-many-requests': errorMessage = 'Muitas tentativas. Tente novamente mais tarde.'; break;
+      }
+
+      showAlert(errorMessage);
+    } finally {
+      setLoading(false);
+    }
+  });
+
+  // Login com Google
+  googleLoginBtn.addEventListener('click', async function() {
+    try {
+      const result = await window.auth.signInWithPopup(window.provider);
+      const user = result.user;
+
+      const idToken = await user.getIdToken();
+
+      const response = await fetch('/api/auth/login', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          idToken: idToken,
+          email: user.email,
+          displayName: user.displayName,
+          photoURL: user.photoURL,
+          uid: user.uid,
+          provider: 'google'
+        })
+      });
+
+      if (response.ok) {
+        showAlert('Login realizado com sucesso!', 'success');
+        setTimeout(() => {
+          window.location.href = '/';
+        }, 1500);
+      } else {
+        throw new Error('Erro no servidor');
+      }
+    } catch (error) {
+      console.error('Erro no login com Google:', error);
+      if (error.code !== 'auth/popup-closed-by-user') {
+        showAlert('Erro ao fazer login com Google. Tente novamente.');
+      }
+    }
+  });
+});
+</script>
