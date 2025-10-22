@@ -15,4 +15,12 @@ router.get('/register', (req, res) => {
    res.render('register', { layout: 'auth', pageTitle: 'register' });
 });
 
+router.get("/perfil", (req, res) => {
+  res.render("perfil", { 
+    pageTitle: "Meu Perfil", 
+    user: req.session.user 
+  });
+});
+
+
 export default router;

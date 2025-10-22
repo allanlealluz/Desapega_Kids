@@ -25,6 +25,13 @@ app.use(session({
     cookie: { secure: false, maxAge: 24 * 60 * 60 * 1000 }
 }));
 
+//middleware
+app.use((req, res, next) => { 
+  res.locals.user = req.session.user || null;
+  next();
+});
+
+
 app.engine('handlebars', engine({
     defaultLayout: 'main',
     partialsDir: path.resolve('views/partials'),
