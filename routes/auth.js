@@ -69,20 +69,6 @@ router.post("/login", async (req, res) => {
       ? userDoc.data()
       : { email, displayName };
 
-<<<<<<< HEAD
-    // foto de perfil também seja carregada
-    const photoURL = userData.photoURL || null;
-
-    // Cria a sessão com foto se tiver
-    req.session.user = {
-      uid,
-      email: userData.email,
-      displayName: userData.displayName,
-      photoURL, 
-      loginTime: new Date(),
-    };
-
-=======
     // Cria a sessão
     req.session.user = {
       uid,
@@ -91,7 +77,6 @@ router.post("/login", async (req, res) => {
       loginTime: new Date(),
     };
 
->>>>>>> 03c003290538e2c7b821d1028d31a2b26445a4f0
     console.log(`✅ Sessão criada para ${email} (login)`);
 
     res.json({
@@ -137,11 +122,7 @@ router.get("/me", (req, res) => {
  * Atualiza nome do usuário logado
  */
 router.post("/update", async (req, res) => {
-<<<<<<< HEAD
-  const { idToken, displayName, uid, photoBase64 } = req.body;
-=======
   const { idToken, displayName, uid } = req.body;
->>>>>>> 03c003290538e2c7b821d1028d31a2b26445a4f0
 
   try {
     const decoded = await auth.verifyIdToken(idToken);
@@ -150,14 +131,6 @@ router.post("/update", async (req, res) => {
     }
 
     // Atualiza no Firestore
-<<<<<<< HEAD
-    const updateData = { displayName, updatedAt: new Date() };
-    if (photoBase64) {
-      updateData.photoURL = photoBase64; // salva imagem como base64
-    }
-
-    await db.collection("users").doc(uid).set(updateData, { merge: true });
-=======
     await db.collection("users").doc(uid).set(
       {
         displayName,
@@ -165,23 +138,14 @@ router.post("/update", async (req, res) => {
       },
       { merge: true }
     );
->>>>>>> 03c003290538e2c7b821d1028d31a2b26445a4f0
 
     // Atualiza sessão Express
     if (req.session.user) {
       req.session.user.displayName = displayName;
-<<<<<<< HEAD
-      if (photoBase64) req.session.user.photoURL = photoBase64;
-    }
-
-    console.log(`✅ Perfil atualizado: ${displayName}`);
-    res.json({ message: "Perfil atualizado com sucesso", photoURL: photoBase64 || null });
-=======
     }
 
     console.log(`✅ Perfil atualizado: ${displayName}`);
     res.json({ message: "Perfil atualizado com sucesso" });
->>>>>>> 03c003290538e2c7b821d1028d31a2b26445a4f0
   } catch (error) {
     console.error("❌ Erro ao atualizar perfil:", error);
     res.status(400).json({ error: error.message });

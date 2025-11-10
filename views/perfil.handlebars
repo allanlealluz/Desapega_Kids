@@ -1,7 +1,3 @@
-<<<<<<< HEAD
-=======
-<!-- views/perfil.handlebars -->
->>>>>>> 03c003290538e2c7b821d1028d31a2b26445a4f0
 <div class="container mt-5">
   <h2 class="mb-4 text-center">
     <i class="bi bi-person-circle me-2"></i>Meu Perfil
@@ -12,7 +8,6 @@
     <div class="col-lg-6">
       <div id="perfilAlert"></div>
 
-<<<<<<< HEAD
       <div class="bg-white p-4 rounded shadow-sm text-center">
         <!-- Foto do usuário -->
         <img id="profileImage"
@@ -22,10 +17,6 @@
              style="width: 120px; height: 120px; object-fit: cover;">
 
         <!-- Visualização -->
-=======
-      <div class="bg-white p-4 rounded shadow-sm">
-        <!-- Informações do usuário -->
->>>>>>> 03c003290538e2c7b821d1028d31a2b26445a4f0
         <div id="perfilView">
           <p><strong>Nome:</strong> <span id="viewName">{{user.displayName}}</span></p>
           <p><strong>Email:</strong> <span id="viewEmail">{{user.email}}</span></p>
@@ -40,7 +31,6 @@
           </div>
         </div>
 
-<<<<<<< HEAD
         <!-- Formulário de edição -->
         <form id="perfilForm" class="d-none mt-3 text-start">
           <div class="text-center mb-3">
@@ -54,10 +44,6 @@
             </div>
           </div>
 
-=======
-        <!-- Formulário de edição (oculto até clicar em editar) -->
-        <form id="perfilForm" class="d-none mt-3">
->>>>>>> 03c003290538e2c7b821d1028d31a2b26445a4f0
           <div class="mb-3">
             <label for="displayName" class="form-label">Nome completo</label>
             <input type="text" id="displayName" class="form-control" value="{{user.displayName}}" required>
@@ -120,13 +106,10 @@ document.addEventListener('DOMContentLoaded', () => {
   const saveSpinner = document.getElementById('saveSpinner');
   const editBtn = document.getElementById('editBtn');
   const cancelEditBtn = document.getElementById('cancelEditBtn');
-<<<<<<< HEAD
   const photoInput = document.getElementById('photoInput');
   const previewImage = document.getElementById('previewImage');
   const profileImage = document.getElementById('profileImage');
   let photoBase64 = null;
-=======
->>>>>>> 03c003290538e2c7b821d1028d31a2b26445a4f0
 
   function showAlert(message, type = 'success') {
     alertDiv.innerHTML = `
@@ -142,7 +125,6 @@ document.addEventListener('DOMContentLoaded', () => {
     else saveSpinner.classList.add('d-none');
   }
 
-<<<<<<< HEAD
   // Quando o usuário escolhe uma imagem
   photoInput?.addEventListener('change', (e) => {
     const file = e.target.files[0];
@@ -156,8 +138,6 @@ document.addEventListener('DOMContentLoaded', () => {
     }
   });
 
-=======
->>>>>>> 03c003290538e2c7b821d1028d31a2b26445a4f0
   // Alterna visualização/edição
   editBtn?.addEventListener('click', () => {
     perfilView.classList.add('d-none');
@@ -169,11 +149,7 @@ document.addEventListener('DOMContentLoaded', () => {
     perfilView.classList.remove('d-none');
   });
 
-<<<<<<< HEAD
   // Autenticação Firebase
-=======
-  //Aguarda autenticação do Firebase antes de permitir edição
->>>>>>> 03c003290538e2c7b821d1028d31a2b26445a4f0
   firebase.auth().onAuthStateChanged((user) => {
     if (!user) {
       console.warn("Usuário não autenticado no Firebase.");
@@ -182,11 +158,7 @@ document.addEventListener('DOMContentLoaded', () => {
       return;
     }
 
-<<<<<<< HEAD
     // Envio do formulário
-=======
-    // Evento de salvar alterações
->>>>>>> 03c003290538e2c7b821d1028d31a2b26445a4f0
     perfilForm?.addEventListener('submit', async (e) => {
       e.preventDefault();
       setLoading(true);
@@ -194,7 +166,6 @@ document.addEventListener('DOMContentLoaded', () => {
       const displayName = document.getElementById('displayName').value.trim();
 
       try {
-<<<<<<< HEAD
         const idToken = await user.getIdToken();
 
         const body = {
@@ -220,23 +191,6 @@ document.addEventListener('DOMContentLoaded', () => {
           previewImage.src = data.photoURL;
         }
 
-=======
-        // Atualiza nome no Firebase Auth
-        await user.updateProfile({ displayName });
-
-        // Gera novo token para enviar ao servidor
-        const idToken = await user.getIdToken();
-        const response = await fetch('/api/auth/update', {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ idToken, displayName, uid: user.uid })
-        });
-
-        if (!response.ok) throw new Error('Erro ao salvar no servidor');
-
-        // Atualiza a interface
-        document.getElementById('viewName').textContent = displayName;
->>>>>>> 03c003290538e2c7b821d1028d31a2b26445a4f0
         showAlert('Informações atualizadas com sucesso!', 'success');
         perfilForm.classList.add('d-none');
         perfilView.classList.remove('d-none');
