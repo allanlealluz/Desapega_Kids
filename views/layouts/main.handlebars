@@ -178,6 +178,7 @@
                 style="width: 35px; height: 35px; object-fit: cover; border: 2px solid var(--primary-color);">
               <span>{{user.displayName}}</span>
             </a>
+<<<<<<< HEAD
             <ul class="dropdown-menu dropdown-menu-end" aria-labelledby="userDropdown">
               <li><a class="dropdown-item" href="/perfil"><i class="bi bi-person-circle me-2"></i>Meu Perfil</a></li>
               <li><hr class="dropdown-divider"></li>
@@ -205,6 +206,46 @@
     </div>
   </div>
 </nav>
+=======
+            
+            <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav">
+                <span class="navbar-toggler-icon"></span>
+            </button>
+            
+            <div class="collapse navbar-collapse" id="navbarNav">
+                <ul class="navbar-nav me-auto">
+                    <li class="nav-item"><a class="nav-link" href="/">Início</a></li>
+
+                    {{#if user}}
+                        <li class="nav-item">
+                            <a class="nav-link" href="/perfil">
+                                <i class="bi bi-person-circle me-1"></i>{{user.displayName}}
+                            </a>
+                        </li>
+                        <li class="nav-item">
+                            <button id="logoutBtn" class="nav-link btn btn-link text-danger p-0">
+                                <i class="bi bi-box-arrow-right me-1"></i>Sair
+                            </button>
+                        </li>
+
+                    {{else}}
+                        <li class="nav-item"><a class="nav-link" href="/register">Cadastro</a></li>
+                        <li class="nav-item"><a class="nav-link" href="/login">Login</a></li>
+                    {{/if}}
+                </ul>
+                
+                <div class="d-flex gap-2">
+                    <a href="/doar" class="btn btn-outline-primary">
+                        <i class="bi bi-plus-circle me-1"></i>Doar
+                    </a>
+                    <a href="/buscar" class="btn btn-primary">
+                        <i class="bi bi-search me-1"></i>Buscar
+                    </a>
+                </div>
+            </div>
+        </div>
+    </nav>
+>>>>>>> 03c003290538e2c7b821d1028d31a2b26445a4f0
 
     <!-- Main Content -->
     <main style="margin-top: 80px;">

@@ -33,7 +33,11 @@ app.use((req, res, next) => {
 });
 
 
+<<<<<<< HEAD
 
+=======
+// CÓDIGO CORRIGIDO
+>>>>>>> 03c003290538e2c7b821d1028d31a2b26445a4f0
 app.engine('handlebars', engine({
 defaultLayout: 'main',
 partialsDir: path.resolve('views/partials'),
