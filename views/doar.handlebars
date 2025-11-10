@@ -131,7 +131,6 @@
 </section>
 
 <script>
-<<<<<<< HEAD
 document.getElementById('imagens').addEventListener('change', function (e) {
   const previewContainer = document.getElementById('preview-imagens');
   previewContainer.innerHTML = '';
@@ -214,95 +213,5 @@ document.getElementById('formDoarItem').addEventListener('submit', async functio
     btnSubmit.disabled = false;
     btnSubmit.innerHTML = originalText;
   }
-=======
-// Preview de imagens
-document.getElementById('imagens').addEventListener('change', function(e) {
-    const previewContainer = document.getElementById('preview-imagens');
-    previewContainer.innerHTML = '';
-    
-    const files = Array.from(e.target.files).slice(0, 5);
-    
-    files.forEach((file, index) => {
-        const reader = new FileReader();
-        reader.onload = function(e) {
-            const div = document.createElement('div');
-            div.className = 'position-relative';
-            div.style.width = '100px';
-            div.style.height = '100px';
-            
-            const img = document.createElement('img');
-            img.src = e.target.result;
-            img.className = 'img-thumbnail';
-            img.style.width = '100%';
-            img.style.height = '100%';
-            img.style.objectFit = 'cover';
-            
-            div.appendChild(img);
-            previewContainer.appendChild(div);
-        };
-        reader.readAsDataURL(file);
-    });
-});
-
-// Submit do formulário
-document.getElementById('formDoarItem').addEventListener('submit', async function(e) {
-    e.preventDefault();
-    
-    const btnSubmit = document.getElementById('btnSubmit');
-    const originalText = btnSubmit.innerHTML;
-    btnSubmit.disabled = true;
-    btnSubmit.innerHTML = '<span class="spinner-border spinner-border-sm me-2"></span>Cadastrando...';
-    
-    try {
-        // Validação da descrição
-        const descricao = document.getElementById('descricao').value;
-        if (descricao.length < 20) {
-            throw new Error('A descrição deve ter no mínimo 20 caracteres');
-        }
-        
-        const formData = new FormData();
-        formData.append('nome', document.getElementById('nome').value);
-        formData.append('categoria', document.getElementById('categoria').value);
-        formData.append('tamanho', document.getElementById('tamanho').value);
-        formData.append('estado', document.getElementById('estado').value);
-        formData.append('descricao', descricao);
-        
-        // Adicionar imagens
-        const imagens = document.getElementById('imagens').files;
-        for (let i = 0; i < Math.min(imagens.length, 5); i++) {
-            formData.append('imagens', imagens[i]);
-        }
-        
-        const response = await fetch('/api/itens', {
-            method: 'POST',
-            headers: {
-                'Content-Type': 'application/json'
-            },
-            body: JSON.stringify({
-                nome: document.getElementById('nome').value,
-                categoria: document.getElementById('categoria').value,
-                tamanho: document.getElementById('tamanho').value,
-                estado: document.getElementById('estado').value,
-                descricao: descricao,
-                imagens: [] // Por enquanto vazio, implementar upload depois
-            })
-        });
-        
-        const data = await response.json();
-        
-        if (data.success) {
-            // Mostrar mensagem de sucesso
-            alert('Item cadastrado com sucesso! Redirecionando...');
-            window.location.href = '/meus-itens';
-        } else {
-            throw new Error(data.message || 'Erro ao cadastrar item');
-        }
-        
-    } catch (error) {
-        alert('Erro: ' + error.message);
-        btnSubmit.disabled = false;
-        btnSubmit.innerHTML = originalText;
-    }
->>>>>>> 03c003290538e2c7b821d1028d31a2b26445a4f0
 });
 </script>
