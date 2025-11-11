@@ -1,41 +1,26 @@
 import express from 'express';
 import { db } from '../firebase-admin.js';
 import { requireAuth } from '../middleware/auth.js';
+import { updateGlobalCounter, getGlobalStats } from '../firebase-counters.js'; // Importação do novo módulo
 
 const router = express.Router();
 
 // IMPORTANTE: Rotas específicas ANTES de rotas com parâmetros dinâmicos
 
-// Estatísticas (DEVE VIR ANTES DE /:id)
+// Estatísticas (AGORA OTIMIZADA)
 router.get('/estatisticas', async (req, res) => {
     try {
-        // Buscar todos os itens sem filtros
-        const itensSnapshot = await db.collection('itens').limit(1000).get();
+        // Apenas lê o documento de estatísticas pré-calculadas
+        const stats = await getGlobalStats();
         
-        const itens = [];
-        itensSnapshot.forEach(doc => {
-            itens.push(doc.data());
-        });
-
-        const totalItens = itens.length;
-        const itensDoados = itens.filter(i => i.status === 'doado').length;
-        const itensDisponiveis = itens.filter(i => i.status === 'disponivel').length;
-        const familiasAjudadas = Math.floor(itensDoados * 0.7);
-        const doadores = new Set(itens.map(i => i.doadorId));
-        const totalDoadores = doadores.size;
-
         res.json({
             success: true,
-            totalItens: itensDisponiveis + itensDoados,
-            itensDoados,
-            itensDisponiveis,
-            familiasAjudadas,
-            totalDoadores,
-            cidades: 1
+            ...stats
         });
 
     } catch (error) {
         console.error('Erro ao buscar estatísticas:', error);
+        // Retorna valores zerados em caso de erro
         res.status(500).json({ 
             success: false, 
             message: 'Erro ao buscar estatísticas',
@@ -49,9 +34,13 @@ router.get('/estatisticas', async (req, res) => {
     }
 });
 
-// Listar itens
+// Listar itens (Mantido o código original, mas com a ressalva de que o filtro no JS é ineficiente)
 router.get('/', async (req, res) => {
     try {
+        // Adicionando a definição de userId para evitar o ReferenceError, caso seja usado no filtro.
+        // Se a rota não exigir autenticação, req.session.user pode ser undefined.
+        const userId = req.session.user ? req.session.user.uid : null; 
+        
         const { categoria, estado, doadorId, status, limit } = req.query;
         
         // Buscar TODOS os itens (ou com limite)
@@ -112,29 +101,17 @@ router.post('/', requireAuth, async (req, res) => {
         const userId = req.session.user.uid;
 
         // Validação dos campos obrigatórios
-        if (!nome || !descricao || !categoria || !estado) {
-            return res.status(400).json({ 
-                success: false, 
-                message: 'Preencha todos os campos obrigatórios' 
-            });
-        }
-
-        // Validação da categoria
         const categoriasValidas = ['roupas', 'brinquedos', 'livros', 'calcados', 'acessorios', 'outros'];
-        if (!categoriasValidas.includes(categoria)) {
-            return res.status(400).json({ 
-                success: false, 
-                message: 'Categoria inválida' 
-            });
-        }
-
-        // Validação do estado
         const estadosValidos = ['novo', 'seminovo', 'usado'];
+
+        if (!nome || !descricao || !categoria || !estado) {
+            return res.status(400).json({ success: false, message: 'Preencha todos os campos obrigatórios' });
+        }
+        if (!categoriasValidas.includes(categoria)) {
+            return res.status(400).json({ success: false, message: 'Categoria inválida' });
+        }
         if (!estadosValidos.includes(estado)) {
-            return res.status(400).json({ 
-                success: false, 
-                message: 'Estado inválido' 
-            });
+            return res.status(400).json({ success: false, message: 'Estado inválido' });
         }
 
         // Criar o objeto do item
@@ -156,6 +133,22 @@ router.post('/', requireAuth, async (req, res) => {
         // Salvar no Firestore
         const docRef = await db.collection('itens').add(novoItem);
 
+        // --- ATUALIZAÇÃO DOS CONTADORES ---
+        // 1. Incrementa o total de itens disponíveis
+        await updateGlobalCounter('itensDisponiveis', 1);
+        
+        // 2. Verifica se é o primeiro item do doador para incrementar o totalDoadores
+        const doadorItensSnapshot = await db.collection('itens')
+            .where('doadorId', '==', userId)
+            .limit(2) // Limita a 2 para saber se já existe outro item
+            .get();
+            
+        // Se o tamanho for 1, é o primeiro item que ele está doando
+        if (doadorItensSnapshot.size === 1) { 
+            await updateGlobalCounter('totalDoadores', 1);
+        }
+        // ----------------------------------
+
         res.status(201).json({ 
             success: true, 
             message: 'Item cadastrado com sucesso!',
@@ -172,32 +165,45 @@ router.post('/', requireAuth, async (req, res) => {
     }
 });
 
-// Editar item (DEVE VIR ANTES DE GET /:id para não conflitar)
+// Editar item
 router.put('/:id', requireAuth, async (req, res) => {
     try {
         const { id } = req.params;
         const { nome, descricao, categoria, tamanho, estado, imagens, status } = req.body;
         const userId = req.session.user.uid;
 
-        // Buscar o item
         const itemRef = db.collection('itens').doc(id);
         const itemDoc = await itemRef.get();
 
         if (!itemDoc.exists) {
-            return res.status(404).json({ 
-                success: false, 
-                message: 'Item não encontrado' 
-            });
+            return res.status(404).json({ success: false, message: 'Item não encontrado' });
         }
 
-        // Verificar se o usuário é o dono do item
         const itemData = itemDoc.data();
         if (itemData.doadorId !== userId) {
-            return res.status(403).json({ 
-                success: false, 
-                message: 'Você não tem permissão para editar este item' 
-            });
+            return res.status(403).json({ success: false, message: 'Você não tem permissão para editar este item' });
         }
+
+        // --- ATUALIZAÇÃO DOS CONTADORES (Se o status mudar) ---
+        const oldStatus = itemData.status;
+        const newStatus = status || oldStatus;
+        
+        if (oldStatus !== newStatus) {
+            // Lógica de decremento
+            if (oldStatus === 'disponivel') {
+                await updateGlobalCounter('itensDisponiveis', -1);
+            } else if (oldStatus === 'doado') {
+                await updateGlobalCounter('itensDoados', -1);
+            }
+            
+            // Lógica de incremento
+            if (newStatus === 'disponivel') {
+                await updateGlobalCounter('itensDisponiveis', 1);
+            } else if (newStatus === 'doado') {
+                await updateGlobalCounter('itensDoados', 1);
+            }
+        }
+        // ------------------------------------------------------
 
         // Preparar dados para atualização
         const dadosAtualizados = {
@@ -224,10 +230,7 @@ router.put('/:id', requireAuth, async (req, res) => {
 
     } catch (error) {
         console.error('Erro ao editar item:', error);
-        res.status(500).json({ 
-            success: false, 
-            message: 'Erro ao editar item' 
-        });
+        res.status(500).json({ success: false, message: 'Erro ao editar item' });
     }
 });
 
@@ -237,40 +240,36 @@ router.delete('/:id', requireAuth, async (req, res) => {
         const { id } = req.params;
         const userId = req.session.user.uid;
 
-        // Buscar o item
         const itemRef = db.collection('itens').doc(id);
         const itemDoc = await itemRef.get();
 
         if (!itemDoc.exists) {
-            return res.status(404).json({ 
-                success: false, 
-                message: 'Item não encontrado' 
-            });
+            return res.status(404).json({ success: false, message: 'Item não encontrado' });
         }
 
-        // Verificar se o usuário é o dono do item
         const itemData = itemDoc.data();
         if (itemData.doadorId !== userId) {
-            return res.status(403).json({ 
-                success: false, 
-                message: 'Você não tem permissão para deletar este item' 
-            });
+            return res.status(403).json({ success: false, message: 'Você não tem permissão para deletar este item' });
         }
+
+        // --- ATUALIZAÇÃO DOS CONTADORES ---
+        // Decrementa o contador do status atual
+        if (itemData.status === 'disponivel') {
+            await updateGlobalCounter('itensDisponiveis', -1);
+        } else if (itemData.status === 'doado') {
+            await updateGlobalCounter('itensDoados', -1);
+        }
+        // O contador 'totalDoadores' não é decrementado, pois um doador que já doou deve ser contado
+        // ----------------------------------
 
         // Deletar do Firestore
         await itemRef.delete();
 
-        res.json({ 
-            success: true, 
-            message: 'Item deletado com sucesso!' 
-        });
+        res.json({ success: true, message: 'Item deletado com sucesso!' });
 
     } catch (error) {
         console.error('Erro ao deletar item:', error);
-        res.status(500).json({ 
-            success: false, 
-            message: 'Erro ao deletar item' 
-        });
+        res.status(500).json({ success: false, message: 'Erro ao deletar item' });
     }
 });
 
@@ -279,7 +278,6 @@ router.get('/:id', async (req, res) => {
     try {
         const { id } = req.params;
         
-        // Validar se o ID parece válido
         if (!id || id.length < 10) {
             return res.status(400).json({ 
                 success: false, 
@@ -311,3 +309,4 @@ router.get('/:id', async (req, res) => {
 });
 
 export default router;
+""

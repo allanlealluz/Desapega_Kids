@@ -361,7 +361,7 @@ router.post('/:id/confirmar-coleta', requireAuth, async (req, res) => {
             });
         });
         await batch.commit();
-
+        await updateGlobalCounter('itensDoados', 1);
         res.json({
             success: true,
             message: 'Coleta confirmada. Item marcado como doado.'
