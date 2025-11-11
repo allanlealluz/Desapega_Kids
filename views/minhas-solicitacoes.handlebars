@@ -1,0 +1,509 @@
+<div class="container my-5">
+    <h2 class="mb-4">
+        <i class="bi bi-clipboard-check me-2"></i>Minhas Solicitações
+    </h2>
+
+    <div id="alertaLimite" class="alert alert-info d-flex align-items-center mb-4">
+        <i class="bi bi-info-circle me-3" style="font-size: 1.5rem;"></i>
+        <div class="flex-grow-1">
+            <strong>Limite mensal:</strong> 
+            <span id="limiteTexto">Você pode fazer até 3 solicitações por mês.</span>
+            <div class="progress mt-2" style="height: 8px;">
+                <div id="limiteProgress" class="progress-bar" role="progressbar" style="width: 0%"></div>
+            </div>
+        </div>
+    </div>
+
+    <ul class="nav nav-tabs mb-4" id="solicitacoesTabs" role="tablist">
+        <li class="nav-item" role="presentation">
+            <button class="nav-link active" id="enviadas-tab" data-bs-toggle="tab" 
+                    data-bs-target="#enviadas" type="button" role="tab">
+                <i class="bi bi-send me-2"></i>Enviadas
+                <span id="badgeEnviadas" class="badge bg-primary ms-2">0</span>
+            </button>
+        </li>
+        <li class="nav-item" role="presentation">
+            <button class="nav-link" id="recebidas-tab" data-bs-toggle="tab" 
+                    data-bs-target="#recebidas" type="button" role="tab">
+                <i class="bi bi-inbox me-2"></i>Recebidas
+                <span id="badgeRecebidas" class="badge bg-success ms-2">0</span>
+            </button>
+        </li>
+    </ul>
+
+    <div class="tab-content" id="solicitacoesTabContent">
+        <div class="tab-pane fade show active" id="enviadas" role="tabpanel">
+            <div id="listaEnviadas" class="row">
+                <div class="col-12 text-center py-5">
+                    <div class="spinner-border text-primary" role="status">
+                        <span class="visually-hidden">Carregando...</span>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="tab-pane fade" id="recebidas" role="tabpanel">
+            <div id="listaRecebidas" class="row">
+                <div class="col-12 text-center py-5">
+                    <div class="spinner-border text-primary" role="status">
+                        <span class="visually-hidden">Carregando...</span>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Modal: Aprovar Solicitação -->
+<div class="modal fade" id="modalAprovar" tabindex="-1">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title">
+                    <i class="bi bi-check-circle me-2"></i>Aprovar Solicitação
+                </h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <form id="formAprovar">
+                <div class="modal-body">
+                    <p class="text-muted">Informe os dados para coleta do item:</p>
+
+                    <div class="mb-3">
+                        <label for="endereco" class="form-label">Endereço para coleta *</label>
+                        <input type="text" class="form-control" id="endereco" required
+                                placeholder="Rua, número, bairro, cidade">
+                        <div class="form-text">Onde o interessado pode buscar o item</div>
+                    </div>
+
+                    <div class="row">
+                        <div class="col-md-6 mb-3">
+                            <label for="dataColeta" class="form-label">Data da coleta *</label>
+                            <input type="date" class="form-control" id="dataColeta" required>
+                        </div>
+                        <div class="col-md-6 mb-3">
+                            <label for="horario" class="form-label">Horário *</label>
+                            <input type="time" class="form-control" id="horario" required>
+                        </div>
+                    </div>
+
+                    <div class="mb-3">
+                        <label for="observacoes" class="form-label">Observações</label>
+                        <textarea class="form-control" id="observacoes" rows="3"
+                                    placeholder="Ex: Tocar a campainha, ligar antes..."></textarea>
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancelar</button>
+                    <button type="submit" class="btn btn-success">
+                        <i class="bi bi-check-circle me-2"></i>Aprovar e Enviar
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
+<!-- Modal: Recusar Solicitação -->
+<div class="modal fade" id="modalRecusar" tabindex="-1">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title">
+                    <i class="bi bi-x-circle me-2"></i>Recusar Solicitação
+                </h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <form id="formRecusar">
+                <div class="modal-body">
+                    <div class="mb-3">
+                        <label for="motivoRecusa" class="form-label">Motivo (opcional)</label>
+                        <textarea class="form-control" id="motivoRecusa" rows="3"
+                                    placeholder="Explique o motivo da recusa..."></textarea>
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancelar</button>
+                    <button type="submit" class="btn btn-danger">
+                        <i class="bi bi-x-circle me-2"></i>Confirmar Recusa
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
+<style>
+    #notificacaoToast {
+        position: fixed;
+        top: 20px;
+        right: 20px;
+        z-index: 1055;
+    }
+</style>
+
+<div id="notificacaoToast" class="toast align-items-center" role="alert" aria-live="assertive" aria-atomic="true" data-bs-delay="5000">
+    <div class="d-flex">
+        <div class="toast-body">
+            <i id="toastIcon" class="bi me-2"></i>
+            <span id="toastMensagem"></span>
+        </div>
+        <button type="button" class="btn-close btn-close-white me-2 m-auto" data-bs-dismiss="toast" aria-label="Close"></button>
+    </div>
+</div>
+
+
+<script>
+let solicitacaoAtual = null;
+let toastElement, toastInstance;
+
+function escaparHTML(str) {
+    if (!str) return '';
+    return str.replace(/[&<>"']/g, function(m) {
+        return {
+            '&': '&amp;',
+            '<': '&lt;',
+            '>': '&gt;',
+            '"': '&quot;',
+            "'": '&#39;'
+        }[m];
+    });
+}
+
+const SPINNER_HTML = `
+    <div class="col-12 text-center py-5">
+        <div class="spinner-border text-primary" role="status">
+            <span class="visually-hidden">Carregando...</span>
+        </div>
+    </div>`;
+
+function mostrarNotificacao(mensagem, tipo = 'info') {
+    const toastIcon = document.getElementById('toastIcon');
+    document.getElementById('toastMensagem').textContent = mensagem;
+
+    toastElement.classList.remove('text-white', 'bg-success', 'bg-danger', 'bg-info');
+    toastIcon.classList.remove('bi-check-circle', 'bi-x-circle', 'bi-info-circle');
+
+    if (tipo === 'success') {
+        toastElement.classList.add('text-white', 'bg-success');
+        toastIcon.classList.add('bi-check-circle');
+    } else if (tipo === 'error') {
+        toastElement.classList.add('text-white', 'bg-danger');
+        toastIcon.classList.add('bi-x-circle');
+    } else {
+        toastElement.classList.add('text-white', 'bg-info');
+        toastIcon.classList.add('bi-info-circle');
+    }
+    
+    toastInstance.show();
+}
+
+async function fetchApi(url, options = {}) {
+    try {
+        const response = await fetch(url, options);
+
+        const text = await response.text();
+        let data;
+        try {
+            data = JSON.parse(text);
+        } catch (e) {
+            if (text.trim().startsWith('<!DOCTYPE html>')) {
+                throw new Error('Sessão expirada. Redirecionando para o login...');
+            }
+            throw new Error('Resposta inesperada do servidor.');
+        }
+
+        if (response.status === 401) {
+             throw new Error(data.message || 'Sessão expirada.');
+        }
+        
+        if (!response.ok) {
+            throw new Error(data.message || 'Erro desconhecido');
+        }
+
+        return data;
+
+    } catch (error) {
+        console.error('Erro na chamada fetchApi:', error.message);
+        
+        if (error.message.includes('Sessão expirada')) {
+            mostrarNotificacao('Sessão expirada. Redirecionando para o login...', 'error');
+            setTimeout(() => {
+                window.location.href = '/login';
+            }, 3000);
+        } else {
+            mostrarNotificacao(error.message, 'error');
+        }
+        
+        return { success: false, error: error.message };
+    }
+}
+
+async function carregarSolicitacoes(tipo, apenasBadge = false) {
+    const container = tipo === 'enviadas' ? document.getElementById('listaEnviadas') : document.getElementById('listaRecebidas');
+    
+    if (!apenasBadge) {
+        container.innerHTML = SPINNER_HTML;
+    }
+    
+    const data = await fetchApi(`/api/solicitacoes/minhas?tipo=${tipo}`);
+
+    if (!data || !data.success) {
+        if (!apenasBadge) {
+            container.innerHTML = `<div class="col-12 text-center py-5"><p class="text-danger">Erro ao carregar solicitações.</p></div>`;
+        }
+        return;
+    }
+
+    if (data.limite) { 
+        const { usado, total, restante } = data.limite;
+        const porcentagem = (usado / total) * 100;
+        
+        document.getElementById('limiteTexto').textContent = 
+            `Você usou ${usado} de ${total} solicitações este mês. Restam ${restante}.`;
+        const progress = document.getElementById('limiteProgress');
+        progress.style.width = porcentagem + '%';
+        progress.classList.remove('bg-success', 'bg-warning', 'bg-danger');
+        
+        if (usado >= total) {
+            progress.classList.add('bg-danger');
+        } else if (usado >= 2) {
+            progress.classList.add('bg-warning');
+        } else {
+            progress.classList.add('bg-success');
+        }
+    }
+
+    if (tipo === 'enviadas') {
+        document.getElementById('badgeEnviadas').textContent = data.solicitacoes.length;
+    } else {
+        document.getElementById('badgeRecebidas').textContent = data.solicitacoes.length;
+    }
+
+    if (apenasBadge) {
+        return;
+    }
+
+    if (data.solicitacoes.length === 0) {
+        container.innerHTML = `
+            <div class="col-12 text-center py-5">
+                <i class="bi bi-inbox" style="font-size: 4rem; color: #ccc;"></i>
+                <p class="text-muted mt-3">Nenhuma solicitação ${tipo === 'enviadas' ? 'enviada' : 'recebida'}</p>
+            </div>
+        `;
+        return;
+    }
+
+    container.innerHTML = data.solicitacoes.map(sol => renderizarSolicitacao(sol, tipo)).join('');
+}
+
+function renderizarSolicitacao(sol, tipo) {
+    const statusBadge = {
+        pendente: '<span class="badge bg-warning">⏳ Pendente</span>',
+        aprovada: '<span class="badge bg-success">✅ Aprovada</span>',
+        recusada: '<span class="badge bg-danger">❌ Recusada</span>',
+        coletada: '<span class="badge bg-info">📦 Coletada</span>',
+        cancelada: '<span class="badge bg-secondary">🚫 Cancelada</span>'
+    };
+
+    const dataFormatada = new Date(sol.criadoEm).toLocaleDateString('pt-BR');
+
+    let botoesAcao = '';
+    
+    if (tipo === 'recebidas' && sol.status === 'pendente') {
+        botoesAcao = `
+            <button class="btn btn-success btn-sm" onclick="abrirModalAprovar('${sol.id}')">
+                <i class="bi bi-check-circle me-1"></i>Aprovar
+            </button>
+            <button class="btn btn-outline-danger btn-sm" onclick="abrirModalRecusar('${sol.id}')">
+                <i class="bi bi-x-circle me-1"></i>Recusar
+            </button>
+        `;
+    } else if (tipo === 'recebidas' && sol.status === 'aprovada') {
+        botoesAcao = `
+            <button class="btn btn-info btn-sm" onclick="confirmarColeta('${sol.id}')">
+                <i class="bi bi-check2-all me-1"></i>Confirmar Coleta
+            </button>
+        `;
+    } else if (tipo === 'enviadas' && (sol.status === 'pendente' || sol.status === 'aprovada')) {
+        botoesAcao = `
+            <button class="btn btn-outline-secondary btn-sm" onclick="cancelarSolicitacao('${sol.id}')">
+                <i class="bi bi-x me-1"></i>Cancelar
+            </button>
+        `;
+    }
+
+    let dadosColeta = '';
+    if (sol.status === 'aprovada' && sol.dadosColeta) {
+        // [CORREÇÃO] A data de coleta deve ser formatada corretamente.
+        // O campo dataColeta já é uma string no formato YYYY-MM-DD.
+        // A conversão para Date e depois para toLocaleDateString pode causar problemas de fuso horário.
+        // Como o input é 'date', o valor é YYYY-MM-DD.
+        // Se for necessário formatar, é melhor usar a string diretamente ou garantir que o fuso horário seja tratado.
+        // Vou manter a lógica original com a correção de fuso horário para evitar problemas de data incorreta.
+        const dataColetaFormatada = new Date(sol.dadosColeta.dataColeta).toLocaleDateString('pt-BR', { timeZone: 'UTC' });
+        dadosColeta = `
+            <div class="alert alert-success mt-3 mb-0">
+                <h6><i class="bi bi-calendar-check me-2"></i>Dados para Coleta:</h6>
+                <p class="mb-1"><strong>📍 Endereço:</strong> ${escaparHTML(sol.dadosColeta.endereco)}</p>
+                <p class="mb-1"><strong>📅 Data:</strong> ${dataColetaFormatada}</p>
+                <p class="mb-1"><strong>🕐 Horário:</strong> ${escaparHTML(sol.dadosColeta.horario)}</p>
+                ${sol.dadosColeta.observacoes ? `<p class="mb-0"><strong>📝 Obs:</strong> ${escaparHTML(sol.dadosColeta.observacoes)}</p>` : ''}
+            </div>
+        `;
+    }
+    
+    let motivoRecusa = '';
+    if (sol.status === 'recusada' && sol.motivoRecusa) {
+        motivoRecusa = `
+            <div class="alert alert-danger mt-3 mb-0">
+                <p class="mb-0 small"><strong>Motivo da recusa:</strong> ${escaparHTML(sol.motivoRecusa)}</p>
+            </div>
+        `;
+    }
+
+    return `
+        <div class="col-md-6 mb-3">
+            <div class="card h-100">
+                <div class="card-body">
+                    <div class="d-flex align-items-start mb-3">
+                        ${sol.itemImagem 
+                            ? `<img src="${escaparHTML(sol.itemImagem)}" class="rounded me-3" style="width: 80px; height: 80px; object-fit: cover;" alt="Imagem do item">` 
+                            : '<div class="bg-light rounded me-3 d-flex align-items-center justify-content-center" style="width: 80px; height: 80px;"><i class="bi bi-image" style="font-size: 2rem; color: #ccc;"></i></div>'}
+                        <div class="flex-grow-1">
+                            <h6 class="mb-1">${escaparHTML(sol.itemNome)}</h6>
+                            ${statusBadge[sol.status] || sol.status}
+                            <p class="text-muted small mb-0 mt-1">
+                                ${tipo === 'enviadas' 
+                                    ? `<strong>Doador:</strong> ${escaparHTML(sol.doadorNome)}` 
+                                    : `<strong>Solicitante:</strong> ${escaparHTML(sol.solicitanteNome)} (${escaparHTML(sol.solicitanteEmail)})`}
+                            </p>
+                            <p class="text-muted small mb-0">📅 ${dataFormatada}</p>
+                        </div>
+                    </div>
+
+                    ${sol.mensagem ? `<p class="text-muted small mb-2 fst-italic">"${escaparHTML(sol.mensagem)}"</p>` : ''}
+                    ${dadosColeta}
+                    ${motivoRecusa}
+
+                    <div class="d-flex gap-2 mt-3">
+                        ${botoesAcao}
+                        <a href="/item/${sol.itemId}" class="btn btn-outline-primary btn-sm ms-auto">
+                            <i class="bi bi-eye me-1"></i>Ver item
+                        </a>
+                    </div>
+                </div>
+            </div>
+        </div>
+    `;
+}
+
+function abrirModalAprovar(id) {
+    solicitacaoAtual = id;
+    document.getElementById('dataColeta').min = new Date().toISOString().split('T')[0];
+    new bootstrap.Modal(document.getElementById('modalAprovar')).show();
+}
+
+document.getElementById('formAprovar').addEventListener('submit', async (e) => {
+    e.preventDefault();
+    const form = e.target;
+    const submitButton = form.querySelector('button[type="submit"]');
+    submitButton.disabled = true;
+
+    const dados = {
+        endereco: document.getElementById('endereco').value,
+        dataColeta: document.getElementById('dataColeta').value,
+        horario: document.getElementById('horario').value,
+        observacoes: document.getElementById('observacoes').value
+    };
+
+    const data = await fetchApi(`/api/solicitacoes/${solicitacaoAtual}/aprovar`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(dados)
+    });
+    
+    if (data && data.success) {
+        mostrarNotificacao('Solicitação aprovada com sucesso!', 'success');
+        bootstrap.Modal.getInstance(document.getElementById('modalAprovar')).hide();
+        carregarSolicitacoes('recebidas');
+        form.reset();
+    }
+    submitButton.disabled = false;
+});
+
+function abrirModalRecusar(id) {
+    solicitacaoAtual = id;
+    new bootstrap.Modal(document.getElementById('modalRecusar')).show();
+}
+
+document.getElementById('formRecusar').addEventListener('submit', async (e) => {
+    e.preventDefault();
+    const form = e.target;
+    const submitButton = form.querySelector('button[type="submit"]');
+    submitButton.disabled = true;
+    
+    const motivo = document.getElementById('motivoRecusa').value;
+
+    const data = await fetchApi(`/api/solicitacoes/${solicitacaoAtual}/recusar`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ motivo })
+    });
+    
+    if (data && data.success) {
+        mostrarNotificacao('Solicitação recusada', 'success');
+        bootstrap.Modal.getInstance(document.getElementById('modalRecusar')).hide();
+        carregarSolicitacoes('recebidas');
+        form.reset();
+    }
+    submitButton.disabled = false;
+});
+
+async function confirmarColeta(id) {
+    if (!confirm('Confirmar que o item foi coletado? Esta ação marcará o item como "Doado".')) return;
+
+    const data = await fetchApi(`/api/solicitacoes/${id}/confirmar-coleta`, {
+        method: 'POST'
+    });
+    
+    if (data && data.success) {
+        mostrarNotificacao('Item marcado como doado!', 'success');
+        carregarSolicitacoes('recebidas');
+    }
+}
+
+async function cancelarSolicitacao(id) {
+    if (!confirm('Deseja cancelar esta solicitação? O item voltará a ficar disponível.')) return;
+
+    const data = await fetchApi(`/api/solicitacoes/${id}/cancelar`, {
+        method: 'POST'
+    });
+    
+    if (data && data.success) {
+        mostrarNotificacao('Solicitação cancelada', 'success');
+        carregarSolicitacoes('enviadas');
+        // [CORREÇÃO] Recarrega o badge da aba 'recebidas' para refletir a mudança no status do item
+        carregarSolicitacoes('recebidas', true); 
+    }
+}
+
+document.getElementById('enviadas-tab').addEventListener('shown.bs.tab', () => {
+    carregarSolicitacoes('enviadas'); 
+});
+
+document.getElementById('recebidas-tab').addEventListener('shown.bs.tab', () => {
+    carregarSolicitacoes('recebidas');
+});
+
+document.addEventListener('DOMContentLoaded', () => {
+    toastElement = document.getElementById('notificacaoToast');
+    toastInstance = new bootstrap.Toast(toastElement);
+    
+    const tabAtiva = document.querySelector('.nav-tabs .nav-link.active');
+    const tipoAtivo = tabAtiva.id === 'enviadas-tab' ? 'enviadas' : 'recebidas';
+    const tipoInativo = tipoAtivo === 'enviadas' ? 'recebidas' : 'enviadas';
+
+    carregarSolicitacoes(tipoAtivo);
+    carregarSolicitacoes(tipoInativo, true);
+});
+</script>

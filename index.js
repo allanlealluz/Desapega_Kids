@@ -7,6 +7,7 @@ import { fileURLToPath } from 'url';
 import authRoutes from './routes/auth.js';
 import itemsRoutes from './routes/items.js';
 import pagesRoutes from './routes/pages.js';
+import solicitacoesRoutes from './routes/solicitacoes.js'
 
 // IMPORTA O FIREBASE
 import { db, auth } from './firebase-admin.js';
@@ -59,6 +60,7 @@ app.use(express.static(path.join(__dirname, 'public')));
 app.use('/api/auth', authRoutes);
 app.use('/api/itens', itemsRoutes);
 app.use('/', pagesRoutes);
+app.use('/api/solicitacoes', solicitacoesRoutes);
 
 // Middleware de erro
 app.use((req, res) => res.status(404).render('erro', { pageTitle: 'Página não encontrada' }));

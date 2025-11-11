@@ -4,50 +4,6 @@ import { auth, db } from "../firebase-admin.js";
 const router = express.Router();
 
 /**
- * 📌 POST /api/auth/register
- * Recebe idToken, email, nome e uid do front (já criado via Firebase Client SDK)
- * Verifica o token no Firebase Admin e salva dados adicionais no Firestore
- * e cria uma sessão no Express.
- */
-router.post("/login", async (req, res) => {
-  const { idToken, email, displayName, uid } = req.body;
-
-  try {
-    const decodedToken = await auth.verifyIdToken(idToken);
-    if (decodedToken.uid !== uid) {
-      return res.status(401).json({ error: "UID inválido" });
-    }
-
-    const userDoc = await db.collection("users").doc(uid).get();
-    
-    // Fallback para dados do token se o doc não existir
-    const userData = userDoc.exists ? userDoc.data() : { email, displayName };
-
-    // Tente pegar a photoURL do Firestore, se não, pegue do token
-    const photoURL = userData.photoURL || decodedToken.picture || null;
-
-    // Cria a sessão
-    req.session.user = {
-      uid,
-      email: userData.email || email,
-      displayName: userData.displayName || displayName,
-      photoURL: photoURL, // <-- ADICIONE AQUI
-      loginTime: new Date(),
-    };
-
-    console.log(`✅ Sessão criada para ${email} (login)`);
-
-    res.json({
-      message: "Login bem-sucedido",
-      user: req.session.user,
-    });
-  } catch (error) {
-    console.error("❌ Erro no login:", error);
-    res.status(400).json({ error: error.message });
-  }
-});
-
-/**
  * 📌 POST /api/auth/login
  * Recebe idToken, valida no Firebase Admin e cria sessão Express
  */
@@ -73,7 +29,7 @@ router.post("/login", async (req, res) => {
       uid,
       email: userData.email || email,
       displayName: userData.displayName || displayName,
-      photoURL: photoURL, // <-- ADICIONE AQUI
+      photoURL: photoURL,
       loginTime: new Date(),
     };
 
@@ -141,6 +97,7 @@ router.post("/update", async (req, res) => {
       updateData.photoURL = photoBase64; // Salvando Base64 diretamente
     }
 
+    // Atualiza no Firestore
     await db.collection("users").doc(uid).set(updateData, { merge: true });
 
     // Atualiza sessão Express
