@@ -9,7 +9,8 @@
       <div id="perfilAlert"></div>
 
       <div class="bg-white p-4 rounded shadow-sm text-center">
-        <!-- Foto do usuário -->
+        
+        <!-- Imagem de Perfil (Usada para Visualização e Preview de Edição) -->
         <img id="profileImage"
              src="{{#if user.photoURL}}{{user.photoURL}}{{else}}/img/default-avatar.png{{/if}}"
              class="rounded-circle mb-3 shadow-sm"
@@ -34,10 +35,7 @@
         <!-- Formulário de edição -->
         <form id="perfilForm" class="d-none mt-3 text-start">
           <div class="text-center mb-3">
-            <img id="previewImage"
-                 src="{{#if user.photoURL}}{{user.photoURL}}{{else}}/img/default-avatar.png{{/if}}"
-                 class="rounded-circle mb-2 shadow-sm"
-                 style="width: 120px; height: 120px; object-fit: cover;">
+            <!-- O input de arquivo é mantido -->
             <div>
               <input type="file" id="photoInput" accept="image/*" class="form-control mt-2">
               <div class="form-text">Selecione uma nova foto (opcional)</div>
@@ -81,7 +79,6 @@
   {{/if}}
 </div>
 
-<!-- Firebase -->
 <script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-app-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-auth-compat.js"></script>
 
@@ -107,7 +104,6 @@ document.addEventListener('DOMContentLoaded', () => {
   const editBtn = document.getElementById('editBtn');
   const cancelEditBtn = document.getElementById('cancelEditBtn');
   const photoInput = document.getElementById('photoInput');
-  const previewImage = document.getElementById('previewImage');
   const profileImage = document.getElementById('profileImage');
   let photoBase64 = null;
 
@@ -125,20 +121,18 @@ document.addEventListener('DOMContentLoaded', () => {
     else saveSpinner.classList.add('d-none');
   }
 
-  // Quando o usuário escolhe uma imagem
   photoInput?.addEventListener('change', (e) => {
     const file = e.target.files[0];
     if (file) {
       const reader = new FileReader();
       reader.onload = (event) => {
-        photoBase64 = event.target.result; // string base64
-        previewImage.src = photoBase64;
+        photoBase64 = event.target.result;
+        profileImage.src = photoBase64; // Usa a mesma imagem para preview
       };
       reader.readAsDataURL(file);
     }
   });
 
-  // Alterna visualização/edição
   editBtn?.addEventListener('click', () => {
     perfilView.classList.add('d-none');
     perfilForm.classList.remove('d-none');
@@ -147,9 +141,12 @@ document.addEventListener('DOMContentLoaded', () => {
   cancelEditBtn?.addEventListener('click', () => {
     perfilForm.classList.add('d-none');
     perfilView.classList.remove('d-none');
+    // Reseta o preview da imagem e o input de arquivo ao cancelar
+    photoBase64 = null;
+    photoInput.value = '';
+    profileImage.src = profileImage.getAttribute('src'); // Recarrega a URL original
   });
 
-  // Autenticação Firebase
   firebase.auth().onAuthStateChanged((user) => {
     if (!user) {
       console.warn("Usuário não autenticado no Firebase.");
@@ -158,7 +155,6 @@ document.addEventListener('DOMContentLoaded', () => {
       return;
     }
 
-    // Envio do formulário
     perfilForm?.addEventListener('submit', async (e) => {
       e.preventDefault();
       setLoading(true);
@@ -172,7 +168,7 @@ document.addEventListener('DOMContentLoaded', () => {
           idToken,
           displayName,
           uid: user.uid,
-          photoBase64: photoBase64 // envia string base64 se existir
+          photoBase64: photoBase64
         };
 
         const response = await fetch('/api/auth/update', {
@@ -188,7 +184,6 @@ document.addEventListener('DOMContentLoaded', () => {
         document.getElementById('viewName').textContent = displayName;
         if (data.photoURL) {
           profileImage.src = data.photoURL;
-          previewImage.src = data.photoURL;
         }
 
         showAlert('Informações atualizadas com sucesso!', 'success');
