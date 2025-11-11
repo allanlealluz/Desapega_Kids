@@ -11,6 +11,7 @@
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.1/font/bootstrap-icons.css">
     <!-- Google Fonts -->
     <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <link rel="shortcut icon" href="img/image.png" type="image/x-icon">
     
     <style>
         :root {
@@ -47,6 +48,7 @@
         }
 
         .auth-left {
+            padding:3px;
             background: linear-gradient(135deg, var(--primary-color), var(--accent-color));
             color: white;
             padding: 3rem;
@@ -54,7 +56,8 @@
             flex-direction: column;
             justify-content: center;
             text-align: center;
-            min-height: 500px;
+            height: 100%;
+    box-sizing: border-box;
         }
 
         .auth-right {
@@ -183,9 +186,9 @@
     </a>
 
     <div class="auth-container">
-        <div class="row g-0">
+        <div class="row lg-6">
             <div class="col-lg-6 d-none d-lg-block">
-                <div class="auth-left">
+                <div class="auth-left h-80">
                     <div class="auth-icon">
                         <i class="bi bi-heart-fill"></i>
                     </div>
