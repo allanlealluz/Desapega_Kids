@@ -11,6 +11,7 @@
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.1/font/bootstrap-icons.css">
     <!-- Google Fonts -->
     <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <link rel="shortcut icon" href="img/image.png" type="image/x-icon">
     
     <style>
         :root {
@@ -47,6 +48,7 @@
         }
 
         .auth-left {
+            padding:3px;
             background: linear-gradient(135deg, var(--primary-color), var(--accent-color));
             color: white;
             padding: 3rem;
@@ -54,7 +56,8 @@
             flex-direction: column;
             justify-content: center;
             text-align: center;
-            min-height: 500px;
+            height: 100%;
+    box-sizing: border-box;
         }
 
         .auth-right {
@@ -183,9 +186,9 @@
     </a>
 
     <div class="auth-container">
-        <div class="row g-0">
+        <div class="row lg-6">
             <div class="col-lg-6 d-none d-lg-block">
-                <div class="auth-left">
+                <div class="auth-left h-80">
                     <div class="auth-icon">
                         <i class="bi bi-heart-fill"></i>
                     </div>
@@ -221,34 +224,25 @@
     </div>
 
     <!-- Firebase SDK -->
-    <script type="module">
-        import { initializeApp } from 'https://www.gstatic.com/firebasejs/10.7.0/firebase-app.js';
-        import { getAuth, signInWithEmailAndPassword, createUserWithEmailAndPassword, signInWithPopup, GoogleAuthProvider, signOut } from 'https://www.gstatic.com/firebasejs/10.7.0/firebase-auth.js';
-        
-        // Sua configuração do Firebase
-        const firebaseConfig = {
-            apiKey: "AIzaSyDZFXASqK-b5_NaYmTZYJ-4oANdyvxpp2k",
-            authDomain: "desapegakids-6e481.firebaseapp.com",
-            projectId: "desapegakids-6e481",
-            storageBucket: "desapegakids-6e481.firebasestorage.app",
-            messagingSenderId: "85324719659",
-            appId: "1:85324719659:web:b3fe68271fd75b72faac6e",
-            measurementId: "G-WG7HSCMTEF"
-        };
+    <script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-auth-compat.js"></script>
+    <script>
+      // Esta é a sua configuração do Firebase (do projeto "desapega-kids")
+      const firebaseConfig = {
+        apiKey: "AIzaSyAl7UODazn1P_Y3bz1fG5c94z4nLvP2iDU",
+        authDomain: "desapega-kids.firebaseapp.com",
+        projectId: "desapega-kids",
+        storageBucket: "desapega-kids.firebasestorage.app",
+        messagingSenderId: "617286670076",
+        appId: "1:617286670076:web:dd859fff720c4fc6512979",
+        measurementId: "G-99FYXVZ13K"
+      };
+      // Inicializa o Firebase UMA VEZ
+      firebase.initializeApp(firebaseConfig);
 
-        // Initialize Firebase
-        const app = initializeApp(firebaseConfig);
-        const auth = getAuth(app);
-        const provider = new GoogleAuthProvider();
-
-        // Tornar disponível globalmente
-        window.auth = auth;
-        window.signInWithEmailAndPassword = signInWithEmailAndPassword;
-        window.createUserWithEmailAndPassword = createUserWithEmailAndPassword;
-        window.signInWithPopup = signInWithPopup;
-        window.GoogleAuthProvider = GoogleAuthProvider;
-        window.provider = provider;
-        window.signOut = signOut;
+      // Disponibiliza globalmente para os scripts de login/registro
+      window.auth = firebase.auth();
+      window.provider = new firebase.auth.GoogleAuthProvider();
     </script>
 
     <!-- Bootstrap JS -->
