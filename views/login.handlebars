@@ -41,26 +41,6 @@
   </p>
 </div>
 
-<!-- 🔥 Correção: scripts do Firebase -->
-<script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-app-compat.js"></script>
-<script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-auth-compat.js"></script>
-<script>
-  const firebaseConfig = {
-    apiKey: "AIzaSyAl7UODazn1P_Y3bz1fG5c94z4nLvP2iDU",
-    authDomain: "desapega-kids.firebaseapp.com",
-    projectId: "desapega-kids",
-    storageBucket: "desapega-kids.firebasestorage.app",
-    messagingSenderId: "617286670076",
-    appId: "1:617286670076:web:dd859fff720c4fc6512979",
-    measurementId: "G-99FYXVZ13K"
-  };
-  firebase.initializeApp(firebaseConfig);
-
-  // Variáveis globais usadas no login
-  window.auth = firebase.auth();
-  window.provider = new firebase.auth.GoogleAuthProvider();
-</script>
-
 <!-- Script de login -->
 <script>
 document.addEventListener('DOMContentLoaded', function() {
@@ -145,7 +125,8 @@ document.addEventListener('DOMContentLoaded', function() {
   // Login com Google
   googleLoginBtn.addEventListener('click', async function() {
     try {
-      const result = await window.auth.signInWithPopup(window.provider);
+      const provider = new firebase.auth.GoogleAuthProvider();
+      const result = await firebase.auth().signInWithPopup(provider);
       const user = result.user;
 
       const idToken = await user.getIdToken();
